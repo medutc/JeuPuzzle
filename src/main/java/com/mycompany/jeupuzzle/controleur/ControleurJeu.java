@@ -7,53 +7,79 @@ package com.mycompany.jeupuzzle.controleur;
 import com.mycompany.jeupuzzle.modele.Grille;
 import com.mycompany.jeupuzzle.vue.FenetreJeu;
 import com.mycompany.jeupuzzle.vue.PanneauGrille;
+import com.mycompany.jeupuzzle.vue.PanneauMenu;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 
-/**
- * Contrôleur faisant le lien entre la Grille (Modèle) et la Fenetre (Vue).
- */
 public class ControleurJeu implements ActionListener {
     
     private Grille grille;
     private FenetreJeu fenetre;
     private PanneauGrille panneauGrille;
+    private PanneauMenu panneauMenu;
     private int deplacements;
 
-    public ControleurJeu() {
-        // 1. Initialiser le modèle
-        grille = new Grille(4); // Puzzle 4x4
-        grille.melanger(150);
-        deplacements = 0;
+    // Variables pour le mode Duel
+    private String nomJoueur1;
+    private String nomJoueur2;
 
-        // 2. Initialiser la vue
+    public ControleurJeu() {
+        // Au démarrage, on initialise juste la fenêtre et le menu
         fenetre = new FenetreJeu();
-        panneauGrille = new PanneauGrille(4, this);
-        fenetre.setPanneauGrille(panneauGrille);
+        panneauMenu = new PanneauMenu(this);
         
-        // 3. Mettre à jour et afficher
-        panneauGrille.mettreAJour(grille);
-        fenetre.setVisible(true); // L'erreur que vous aviez n'apparaîtra plus !
+        fenetre.setPanneauMenu(panneauMenu); // On affiche le menu en premier
+        fenetre.setVisible(true);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        String[] coordonnees = e.getActionCommand().split(",");
-        int x = Integer.parseInt(coordonnees[0]);
-        int y = Integer.parseInt(coordonnees[1]);
+        String commande = e.getActionCommand();
 
-        if (grille.deplacer(x, y)) {
-            deplacements++;
-            panneauGrille.mettreAJour(grille);
+        // Si le joueur a cliqué sur le bouton du menu
+        if (commande.equals("DEMARRER_DUEL")) {
+            // 1. Récupérer les noms
+            nomJoueur1 = panneauMenu.getNomJoueur1();
+            nomJoueur2 = panneauMenu.getNomJoueur2();
+            
+            // 2. Préparer la première partie (Tour du Joueur 1)
+            JOptionPane.showMessageDialog(fenetre, "C'est à " + nomJoueur1 + " de jouer !");
+            lancerNouvellePartie();
+        } 
+        // Sinon, c'est que le joueur a cliqué sur une case de la grille (coordonnées x,y)
+        else if (commande.contains(",")) {
+            String[] coordonnees = commande.split(",");
+            int x = Integer.parseInt(coordonnees[0]);
+            int y = Integer.parseInt(coordonnees[1]);
 
-            if (grille.estResolu()) {
-                JOptionPane.showMessageDialog(fenetre, 
-                    "Félicitations ! Vous avez gagné en " + deplacements + " déplacements.", 
-                    "Victoire", 
-                    JOptionPane.INFORMATION_MESSAGE);
-                // La sauvegarde en Base de données se fera ici plus tard
+            if (grille.deplacer(x, y)) {
+                deplacements++;
+                panneauGrille.mettreAJour(grille);
+
+                if (grille.estResolu()) {
+                    JOptionPane.showMessageDialog(fenetre, 
+                        "Bien joué ! " + deplacements + " déplacements.", 
+                        "Fin du tour", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                    
+                    // TODO: Plus tard, ici on passera au tour du Joueur 2 !
+                }
             }
         }
+    }
+
+    /**
+     * Prépare la grille et bascule l'affichage.
+     */
+    private void lancerNouvellePartie() {
+        grille = new Grille(4);
+        grille.melanger(150);
+        deplacements = 0;
+
+        panneauGrille = new PanneauGrille(4, this);
+        panneauGrille.mettreAJour(grille);
+        
+        fenetre.setPanneauGrille(panneauGrille); // On remplace le menu par la grille
     }
 }

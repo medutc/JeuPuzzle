@@ -15,7 +15,7 @@ public class FenetreJeu extends JFrame { // La correction "extends JFrame" est i
     private PanneauGrille panneauGrille;
 
     public FenetreJeu() {
-        setTitle("Jeu de Puzzle Glissant - GI S6");
+        setTitle("Jeu de Puzzle Glissant");
         setSize(500, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Centre la fenêtre
@@ -28,6 +28,15 @@ public class FenetreJeu extends JFrame { // La correction "extends JFrame" est i
         }
         this.panneauGrille = panneauGrille;
         add(this.panneauGrille, BorderLayout.CENTER);
+        revalidate();
+        repaint();
+    }
+    public void setPanneauMenu(PanneauMenu panneauMenu) {
+        // Si la grille est affichée, on la retire
+        if (this.panneauGrille != null) {
+            remove(this.panneauGrille);
+        }
+        add(panneauMenu, BorderLayout.CENTER);
         revalidate();
         repaint();
     }

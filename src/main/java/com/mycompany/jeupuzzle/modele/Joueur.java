@@ -4,10 +4,16 @@
  */
 package com.mycompany.jeupuzzle.modele;
 
-/**
- *
- * @author medmi
- */
 public class Joueur {
-    
+    private String nom;
+    private int scoreFinal;
+
+    public Joueur(String nom) {
+        this.nom = nom;
+        this.scoreFinal = 0;
+    }
+
+    public String getNom() { return nom; }
+    public int getScoreFinal() { return scoreFinal; }
+    public void setScoreFinal(int score) { this.scoreFinal = score; }
 }

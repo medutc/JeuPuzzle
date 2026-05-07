@@ -10,7 +10,9 @@ import java.util.Random;
  * Modèle gérant la logique du jeu de puzzle glissant.
  */
 public class Grille {
-    
+    private int[][] plateauInitial;
+    private int initVideX;
+    private int initVideY;
     private int[][] plateau;
     private int taille;
     private int videX;
@@ -70,6 +72,12 @@ public class Grille {
                 mouvementsFaits++;
             }
         }
+        plateauInitial = new int[taille][taille];
+    for (int i = 0; i < taille; i++) {
+        System.arraycopy(plateau[i], 0, plateauInitial[i], 0, taille);
+    }
+    initVideX = videX;
+    initVideY = videY;
     }
 
     public boolean estResolu() {
@@ -87,6 +95,13 @@ public class Grille {
         }
         return true;
     }
+    public void rechargerPlateauInitial() {
+    for (int i = 0; i < taille; i++) {
+        System.arraycopy(plateauInitial[i], 0, plateau[i], 0, taille);
+    }
+    videX = initVideX;
+    videY = initVideY;
+}
 
     public int getTaille() { return taille; }
     public int getValeur(int x, int y) { return plateau[x][y]; }

@@ -10,4 +10,12 @@
         <maven.compiler.release>25</maven.compiler.release>
         <exec.mainClass>com.mycompany.jeupuzzle.JeuPuzzle</exec.mainClass>
     </properties>
+    <dependencies>
+        <!-- Dépendance pour la connexion à MySQL -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.2.0</version>
+        </dependency>
+    </dependencies>
 </project>

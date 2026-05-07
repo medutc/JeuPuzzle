@@ -4,10 +4,31 @@
  */
 package com.mycompany.jeupuzzle.vue;
 
+import javax.swing.*;
+import java.awt.*;
+
 /**
- *
- * @author medmi
+ * Fenêtre principale (JFrame) contenant les panneaux.
  */
-public class FenetreJeu {
+public class FenetreJeu extends JFrame { // La correction "extends JFrame" est ici !
     
+    private PanneauGrille panneauGrille;
+
+    public FenetreJeu() {
+        setTitle("Jeu de Puzzle Glissant - GI S6");
+        setSize(500, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Centre la fenêtre
+        setLayout(new BorderLayout());
+    }
+
+    public void setPanneauGrille(PanneauGrille panneauGrille) {
+        if (this.panneauGrille != null) {
+            remove(this.panneauGrille);
+        }
+        this.panneauGrille = panneauGrille;
+        add(this.panneauGrille, BorderLayout.CENTER);
+        revalidate();
+        repaint();
+    }
 }

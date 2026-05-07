@@ -54,14 +54,16 @@ public class ControleurJeu implements ActionListener {
         if (commande.equals("DEMARRER_DUEL")) {
             nomJoueur1 = panneauMenu.getNomJoueur1();
             nomJoueur2 = panneauMenu.getNomJoueur2();
-            estTourJoueur1 = true;
-            
-            // On prévient que le premier joueur commence
-            JOptionPane.showMessageDialog(fenetre, 
-                    "C'est à " + nomJoueur1 + " de commencer !", 
-                    "Début du Duel", 
-                    JOptionPane.INFORMATION_MESSAGE);
-            
+       // --- AJOUT DE L'ALÉATOIRE ICI ---
+    // On tire au sort : 50% de chance que estTourJoueur1 soit vrai ou faux
+    estTourJoueur1 = new java.util.Random().nextBoolean();
+    
+    String quiCommence = estTourJoueur1 ? nomJoueur1 : nomJoueur2;
+    
+    JOptionPane.showMessageDialog(fenetre, 
+            "Le tirage au sort a désigné : " + quiCommence + " pour commencer !", 
+            "Début du Duel", 
+            JOptionPane.INFORMATION_MESSAGE);
             lancerNouvellePartie();
         } 
         

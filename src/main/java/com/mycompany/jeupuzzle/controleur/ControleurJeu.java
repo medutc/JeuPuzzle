@@ -1,153 +1,164 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.jeupuzzle.controleur;
 
 import com.mycompany.jeupuzzle.modele.Grille;
 import com.mycompany.jeupuzzle.vue.FenetreJeu;
 import com.mycompany.jeupuzzle.vue.PanneauGrille;
 import com.mycompany.jeupuzzle.vue.PanneauMenu;
+import com.mycompany.jeupuzzle.util.GestionnaireBDD;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Random;
 import javax.swing.JOptionPane;
 
 /**
- * Contrôleur principal faisant le lien entre la logique du jeu (Modèle) et l'affichage (Vue).
- * Gère également le déroulement des tours pour le mode Duel.
+ * Contrôleur principal gérant le cycle de vie du jeu (MVC).
  */
 public class ControleurJeu implements ActionListener {
     
-    // Éléments du MVC
+    // Attributs du Modèle et de la Vue
     private Grille grille;
     private FenetreJeu fenetre;
     private PanneauGrille panneauGrille;
     private PanneauMenu panneauMenu;
     
-    // Variables pour la logique de la partie
+    // Variables de session de jeu
     private int deplacements;
     private String nomJoueur1;
     private String nomJoueur2;
-    private int scoreJoueur1;
-    private boolean estTourJoueur1;
+    private int scoreTour1;
+    private boolean estTourJoueur1; // Détermine qui est en train de jouer
+    private String nomJoueurActuel;
+    private Random random = new Random();
 
     public ControleurJeu() {
-        // Initialisation de la fenêtre principale
+        // Initialisation des composants
         fenetre = new FenetreJeu();
-        
-        // Initialisation du menu d'accueil
         panneauMenu = new PanneauMenu(this);
         
-        // On affiche le menu au démarrage de l'application
+        // Affichage du menu principal
         fenetre.setPanneauMenu(panneauMenu);
         fenetre.setVisible(true);
     }
 
-    /**
-     * Méthode déclenchée à chaque clic sur un bouton (dans le menu ou sur la grille).
-     */
     @Override
     public void actionPerformed(ActionEvent e) {
         String commande = e.getActionCommand();
 
-        // 1. Si le joueur clique sur le bouton "Démarrer le Duel !" dans le menu
+        // Gestion du clic sur "Démarrer le Duel"
         if (commande.equals("DEMARRER_DUEL")) {
-            nomJoueur1 = panneauMenu.getNomJoueur1();
-            nomJoueur2 = panneauMenu.getNomJoueur2();
-       // --- AJOUT DE L'ALÉATOIRE ICI ---
-    // On tire au sort : 50% de chance que estTourJoueur1 soit vrai ou faux
-    estTourJoueur1 = new java.util.Random().nextBoolean();
-    
-    String quiCommence = estTourJoueur1 ? nomJoueur1 : nomJoueur2;
-    
-    JOptionPane.showMessageDialog(fenetre, 
-            "Le tirage au sort a désigné : " + quiCommence + " pour commencer !", 
-            "Début du Duel", 
-            JOptionPane.INFORMATION_MESSAGE);
-            lancerNouvellePartie();
+            preparerDuel();
         } 
-        
-        // 2. Si le joueur clique sur une case de la grille (les coordonnées sont du type "x,y")
+        // Gestion du clic sur une case (ex: "2,1")
         else if (commande.contains(",")) {
-            String[] coordonnees = commande.split(",");
-            int x = Integer.parseInt(coordonnees[0]);
-            int y = Integer.parseInt(coordonnees[1]);
+            jouerCoup(commande);
+        }
+    }
 
-            // Tenter de déplacer la case dans le Modèle
-            if (grille.deplacer(x, y)) {
-                deplacements++; // On incrémente le compteur de coups
-                panneauGrille.mettreAJour(grille); // On rafraîchit l'affichage
+    private void preparerDuel() {
+        nomJoueur1 = panneauMenu.getNomJoueur1();
+        nomJoueur2 = panneauMenu.getNomJoueur2();
+        
+        // Validation simple des noms
+        if (nomJoueur1.isEmpty() || nomJoueur2.isEmpty()) {
+            JOptionPane.showMessageDialog(fenetre, "Veuillez saisir les noms des deux joueurs !");
+            return;
+        }
 
-                // Vérifier si le puzzle est résolu après ce déplacement
-                if (grille.estResolu()) {
-                    gererFinDeTour();
-                }
+        // TIRAGE AU SORT DU PREMIER JOUEUR
+        estTourJoueur1 = random.nextBoolean();
+        nomJoueurActuel = estTourJoueur1 ? nomJoueur1 : nomJoueur2;
+        
+        JOptionPane.showMessageDialog(fenetre, 
+                "Le sort a désigné : " + nomJoueurActuel + " pour commencer !", 
+                "Tirage au sort", 
+                JOptionPane.INFORMATION_MESSAGE);
+        
+        lancerNouvellePartie();
+    }
+
+    private void jouerCoup(String coordStr) {
+        String[] coord = coordStr.split(",");
+        int x = Integer.parseInt(coord[0]);
+        int y = Integer.parseInt(coord[1]);
+
+        if (grille.deplacer(x, y)) {
+            deplacements++;
+            panneauGrille.mettreAJour(grille);
+
+            if (grille.estResolu()) {
+                gererVictoireEtape();
             }
         }
     }
 
-    /**
-     * Initialise une nouvelle grille mélangée et l'affiche à l'écran.
-     */
     private void lancerNouvellePartie() {
-        // Création d'une nouvelle grille 4x4 et mélange aléatoire
         grille = new Grille(4);
-        grille.melanger(150);
-        deplacements = 0; // Remise à zéro du compteur pour ce tour
+        grille.melanger(150); // Mélange aléatoire
+        deplacements = 0;
 
-        // Création de l'interface visuelle de la grille
         panneauGrille = new PanneauGrille(4, this);
         panneauGrille.mettreAJour(grille);
         
-        // Affichage de la grille dans la fenêtre
         fenetre.setPanneauGrille(panneauGrille);
     }
 
-    /**
-     * Gère la transition entre le Joueur 1 et le Joueur 2, ou la fin du duel.
-     */
-    private void gererFinDeTour() {
-        if (estTourJoueur1) {
-            // -- FIN DU TOUR DU JOUEUR 1 --
-            scoreJoueur1 = deplacements;
-            estTourJoueur1 = false;
+    private void gererVictoireEtape() {
+        if (scoreTour1 == 0) { 
+            // C'est le premier joueur qui vient de finir
+            scoreTour1 = deplacements;
+            String message = "Bravo " + nomJoueurActuel + " !\n" +
+                             "Score : " + scoreTour1 + " coups.\n\n" +
+                             "Au tour de l'adversaire !";
             
-            JOptionPane.showMessageDialog(fenetre, 
-                "Bravo " + nomJoueur1 + ", tu as terminé en " + scoreJoueur1 + " coups !\n" +
-                "Laisse la place... C'est au tour de " + nomJoueur2 + " !", 
-                "Fin du Tour 1", 
-                JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(fenetre, message);
             
-            lancerNouvellePartie(); // On génère un nouveau puzzle pour le Joueur 2
+            // Changement de joueur
+            estTourJoueur1 = !estTourJoueur1;
+            nomJoueurActuel = estTourJoueur1 ? nomJoueur1 : nomJoueur2;
             
+            lancerNouvellePartie();
         } else {
-            // -- FIN DU TOUR DU JOUEUR 2 --
-            int scoreJoueur2 = deplacements;
-            determinerGagnant(scoreJoueur1, scoreJoueur2);
+            // C'est le deuxième joueur qui vient de finir
+            int scoreTour2 = deplacements;
+            conclureDuel(scoreTour1, scoreTour2);
         }
     }
 
-    /**
-     * Compare les scores, annonce le vainqueur et retourne au menu principal.
-     */
-    private void determinerGagnant(int s1, int s2) {
-        String message = "--- RÉSULTATS DU DUEL ---\n\n" +
-                         "Score de " + nomJoueur1 + " : " + s1 + " coups\n" +
-                         "Score de " + nomJoueur2 + " : " + s2 + " coups\n\n";
-        
+    private void conclureDuel(int s1, int s2) {
+        // Déterminer le gagnant
+        String gagnant;
+        // On compare qui a fait le moins de coups
         if (s1 < s2) {
-            message += "🏆 Félicitations, " + nomJoueur1 + " remporte la victoire !";
+            gagnant = estTourJoueur1 ? nomJoueur2 : nomJoueur1; // Le premier joueur
         } else if (s2 < s1) {
-            message += "🏆 Félicitations, " + nomJoueur2 + " remporte la victoire !";
+            gagnant = nomJoueurActuel; // Le deuxième joueur (celui qui joue maintenant)
         } else {
-            message += "🤝 Égalité parfaite !";
+            gagnant = "Égalité";
         }
 
-        JOptionPane.showMessageDialog(fenetre, message, "Résultat Final", JOptionPane.INFORMATION_MESSAGE);
+        String bilan = "--- RÉSULTATS DU DUEL ---\n" +
+                       "Score 1er joueur : " + s1 + "\n" +
+                       "Score 2ème joueur : " + s2 + "\n\n" +
+                       "🏆 VAINQUEUR : " + gagnant;
+
+        JOptionPane.showMessageDialog(fenetre, bilan, "Fin de partie", JOptionPane.INFORMATION_MESSAGE);
         
-        // TODO: C'est ici que l'on fera appel à GestionnaireBDD pour sauvegarder les scores dans la base de données
+        // SAUVEGARDE EN BASE DE DONNÉES
+        // On enregistre les noms dans l'ordre de saisie pour la table historiques
+        GestionnaireBDD.enregistrerDuel(nomJoueur1, s1, nomJoueur2, s2, gagnant);
         
-        // Retour automatique au menu pour pouvoir relancer un nouveau duel
+        // Reset pour une future partie
+        scoreTour1 = 0;
         fenetre.setPanneauMenu(panneauMenu);
+    }
+
+    /**
+     * Point d'entrée principal de l'application.
+     */
+    public static void main(String[] args) {
+        // Lancer l'application dans le thread de l'interface graphique
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            new ControleurJeu();
+        });
     }
 }
